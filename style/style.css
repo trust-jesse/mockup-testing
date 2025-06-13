@@ -10,9 +10,13 @@
 }
 
 .sidebar {
-  width: 240px;
+  width: 25%;
   background: #f5f5f5;
   border-right: 1px solid #ddd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
 }
 
 .main-content {

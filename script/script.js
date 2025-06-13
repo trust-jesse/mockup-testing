@@ -52,8 +52,8 @@ function updateInfoPanel() {
   const artCenterX = parseFloat(art.getAttribute('x')) + artBox.width / 2;
   const verticalDistance = Math.round((artTop - boxTop) * bgRatio);
   const horizontalDistance = Math.round((artCenterX - boxCenterX) * bgRatio);
-  verticalDistanceSpan.textContent = verticalDistance;
-  horizontalDistanceSpan.textContent = horizontalDistance;
+  // verticalDistanceSpan.textContent = verticalDistance;
+  // horizontalDistanceSpan.textContent = horizontalDistance;
   // Calculate inches (pixels / 72)
   verticalDistanceInSpan.textContent = (verticalDistance / 72).toFixed(2);
   horizontalDistanceInSpan.textContent = (horizontalDistance / 72).toFixed(2);
