@@ -17,6 +17,7 @@
             <li>frontArtImage: <span id="var-frontArtImage"></span></li>
             <li>frontBoc: <input id="var-frontBoc" class="boc-input" type="number" step="0.01" /></li>
             <li>frontOffset: <input id="var-frontOffset" class="offset-input" type="number" step="0.01" /></li>
+            <li>frontArt Dimensions: <span id="var-frontArtDims"></span></li>
           </ul>
           <br>
           <h3>Back Variables</h3>
@@ -26,11 +27,13 @@
             <li>backArtImage: <span id="var-backArtImage"></span></li>
             <li>backBoc: <input id="var-backBoc" class="boc-input" type="number" step="0.01" /></li>
             <li>backOffset: <input id="var-backOffset" class="offset-input" type="number" step="0.01" /></li>
+            <li>backArt Dimensions: <span id="var-backArtDims"></span></li>
           </ul>
           <br>
           <h3>Global</h3>
           <ul>
             <li>imagePPI: <span id="var-imagePPI"></span></li>
+            <li>blankColor: <span id="var-blankColor"></span></li>
           </ul>
         </div>
       </aside>
@@ -39,45 +42,45 @@
           <!-- Left Canvas (Front) -->
           <svg class="mockup-canvas" data-canvas="front" viewBox="0 0 400 400">
             <filter id="conform-front" x="-100%" y="-100%" width="500%" height="500%">
+              <feFlood flood-color="#213d4b" result="BG_COLOR" />
+              <feComposite in="BG_COLOR" in2="SourceAlpha" operator="over" result="BG_COLOR" />
               <feImage data-img-type="front-map" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="MAP_RESULT" />
               <feColorMatrix in="MAP_RESULT" type="saturate" values="0" result="MAP_DESATURATE_RESULT" />
               <feGaussianBlur in="MAP_DESATURATE_RESULT" stdDeviation="0.5" result="MAP_BLUR_RESULT" />
-              <feDisplacementMap in="SourceGraphic" in2="MAP_BLUR_RESULT" scale="4" xChannelSelector="R" yChannelSelector="R" result="DISPLACED_TEXT_RESULT" />
-              <feImage data-img-type="front-map" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="BG" />
-              <feColorMatrix in="DISPLACED_TEXT_RESULT" result="TEXTURED_TEXT_2" type="matrix" values="1 0 0 0 0
-                      0 1 0 0 0
-                      0 0 1 0 0
-                      0 0 0 .9 0" />
-              <feBlend in="BG" in2="TEXTURED_TEXT_2" mode="multiply" result="BLENDED_TEXT" />
+              <feDisplacementMap in="SourceGraphic" in2="MAP_BLUR_RESULT" scale="4" xChannelSelector="R" yChannelSelector="R" result="DISPLACED_ART" />
+              <feComposite in="DISPLACED_ART" in2="BG_COLOR" operator="over" result="ART_OVER_BG" />
               <feMerge>
-                <feMergeNode in="BG"></feMergeNode>
-                <feMergeNode in="BLENDED_TEXT"></feMergeNode>
+                <feMergeNode in="ART_OVER_BG"/>
               </feMerge>
             </filter>
-            <image data-img-type="front-map" x="0" y="0" width="400" height="400" preserveAspectRatio="xMidYMid meet" />
-            <image id="draggable-art-front" data-img-type="front-art" x="150" y="150" width="100" height="100" preserveAspectRatio="xMidYMid meet" filter="url(#conform-front)" />
+            <!-- Flat color background -->
+            <rect id="front-blank-bg" x="0" y="0" width="400" height="400" />
+            <!-- Art image, draggable, with displacement filter -->
+            <image id="draggable-art-front" data-img-type="front-art" x="150" y="150" width="100" height="100" preserveAspectRatio="xMidYMid slice" filter="url(#conform-front)" />
+            <!-- Overlay image, fills canvas -->
+            <image data-img-type="front-overlay" x="0" y="0" width="400" height="400" preserveAspectRatio="none" />
             <rect id="constraint-rect-front" x="125" y="70" width="150" height="200" fill="none" stroke="#e1e1e1" stroke-width="1" />
           </svg>
           <!-- Right Canvas (Back) -->
           <svg class="mockup-canvas" data-canvas="back" viewBox="0 0 400 400">
             <filter id="conform-back" x="-100%" y="-100%" width="500%" height="500%">
+              <feFlood flood-color="#213d4b" result="BG_COLOR" />
+              <feComposite in="BG_COLOR" in2="SourceAlpha" operator="over" result="BG_COLOR" />
               <feImage data-img-type="back-map" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="MAP_RESULT" />
               <feColorMatrix in="MAP_RESULT" type="saturate" values="0" result="MAP_DESATURATE_RESULT" />
               <feGaussianBlur in="MAP_DESATURATE_RESULT" stdDeviation="0.5" result="MAP_BLUR_RESULT" />
-              <feDisplacementMap in="SourceGraphic" in2="MAP_BLUR_RESULT" scale="4" xChannelSelector="R" yChannelSelector="R" result="DISPLACED_TEXT_RESULT" />
-              <feImage data-img-type="back-map" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="BG" />
-              <feColorMatrix in="DISPLACED_TEXT_RESULT" result="TEXTURED_TEXT_2" type="matrix" values="1 0 0 0 0
-                      0 1 0 0 0
-                      0 0 1 0 0
-                      0 0 0 .9 0" />
-              <feBlend in="BG" in2="TEXTURED_TEXT_2" mode="multiply" result="BLENDED_TEXT" />
+              <feDisplacementMap in="SourceGraphic" in2="MAP_BLUR_RESULT" scale="4" xChannelSelector="R" yChannelSelector="R" result="DISPLACED_ART" />
+              <feComposite in="DISPLACED_ART" in2="BG_COLOR" operator="over" result="ART_OVER_BG" />
               <feMerge>
-                <feMergeNode in="BG"></feMergeNode>
-                <feMergeNode in="BLENDED_TEXT"></feMergeNode>
+                <feMergeNode in="ART_OVER_BG"/>
               </feMerge>
             </filter>
-            <image data-img-type="back-map" x="0" y="0" width="400" height="400" preserveAspectRatio="xMidYMid meet" />
-            <image id="draggable-art-back" data-img-type="back-art" x="150" y="150" width="100" height="100" preserveAspectRatio="xMidYMid meet" filter="url(#conform-back)" />
+            <!-- Flat color background -->
+            <rect id="back-blank-bg" x="0" y="0" width="400" height="400" />
+            <!-- Art image, draggable, with displacement filter -->
+            <image id="draggable-art-back" data-img-type="back-art" x="150" y="150" width="100" height="100" preserveAspectRatio="xMidYMid slice" filter="url(#conform-back)" />
+            <!-- Overlay image, fills canvas -->
+            <image data-img-type="back-overlay" x="0" y="0" width="400" height="400" preserveAspectRatio="none" />
             <rect id="constraint-rect-back" x="125" y="70" width="150" height="200" fill="none" stroke="#e1e1e1" stroke-width="1" />
           </svg>
         </div>

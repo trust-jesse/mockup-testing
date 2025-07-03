@@ -5,6 +5,7 @@ const frontMapImage = "https://tds-website.s3.us-east-2.amazonaws.com/client-web
 const backMapImage = "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/5026/back-map.avif";
 const frontOverlayImage = "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/5026/front-overlay.avif";
 const backOverlayImage = "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/5026/back-overlay.avif";
+let blankColor = "#213d4b";
 
 // Placements
 
@@ -69,52 +70,65 @@ function setupMockupCanvas(canvas) {
   let bgOriginalWidth = 0;
   let bgOriginalHeight = 0;
   let bgRatio = 1;
+
+  // Helper to size and position art after both bg and art images are loaded
+  function sizeAndPositionArt(bgRatio, artImg) {
+    const originalArtWidth = artImg.naturalWidth;
+    const originalArtHeight = artImg.naturalHeight;
+    // Scale by bgRatio
+    const scaledWidth = originalArtWidth / bgRatio;
+    const scaledHeight = originalArtHeight / bgRatio;
+    art.setAttribute('width', scaledWidth);
+    art.setAttribute('height', scaledHeight);
+    // Set initial position for front art image using frontBoc and frontOffset
+    if (canvas.dataset.canvas === 'front') {
+      const artY = rectY + (frontBoc * imagePPI) / bgRatio;
+      art.setAttribute('y', artY);
+      const boxCenterX = rectX + rectWidth / 2;
+      const artX = boxCenterX - scaledWidth / 2 + (frontOffset * imagePPI) / bgRatio;
+      art.setAttribute('x', artX);
+      // Update sidebar with art dimensions in inches
+      const widthInches = (originalArtWidth / imagePPI).toFixed(2);
+      const heightInches = (originalArtHeight / imagePPI).toFixed(2);
+      const dimsElem = document.getElementById('var-frontArtDims');
+      if (dimsElem) dimsElem.textContent = `${widthInches} in × ${heightInches} in`;
+    }
+    if (canvas.dataset.canvas === 'back') {
+      const artY = rectY + (backBoc * imagePPI) / bgRatio;
+      art.setAttribute('y', artY);
+      const boxCenterX = rectX + rectWidth / 2;
+      const artX = boxCenterX - scaledWidth / 2 + (backOffset * imagePPI) / bgRatio;
+      art.setAttribute('x', artX);
+      // Update sidebar with art dimensions in inches
+      const widthInches = (originalArtWidth / imagePPI).toFixed(2);
+      const heightInches = (originalArtHeight / imagePPI).toFixed(2);
+      const dimsElem = document.getElementById('var-backArtDims');
+      if (dimsElem) dimsElem.textContent = `${widthInches} in × ${heightInches} in`;
+    }
+  }
+
+  // Load background image to get bgRatio
   const bgImg = new window.Image();
-  const bgHref = canvas.querySelector('image:not([id])').getAttribute('href');
+  // Use the feImage for the map as the source
+  const feMap = canvas.querySelector('feImage[data-img-type$="map"]');
+  const bgHref = feMap ? feMap.getAttribute('href') : undefined;
+  if (!bgHref) return;
   bgImg.src = bgHref;
   bgImg.onload = function() {
     bgOriginalWidth = bgImg.naturalWidth;
     bgOriginalHeight = bgImg.naturalHeight;
     const svgElement = canvas;
     bgRatio = bgOriginalWidth / svgElement.clientWidth;
-
-    // Now scale the art image using its own pixel dimensions
+    // Now load the art image and size/position after it loads
     const artImg = new window.Image();
     artImg.src = art.getAttribute('href');
-    artImg.onload = function() {
-      // Use the art image's own pixel dimensions
-      const originalArtWidth = artImg.naturalWidth;
-      const originalArtHeight = artImg.naturalHeight;
-
-      // Scale by bgRatio
-      const scaledWidth = originalArtWidth / bgRatio;
-      const scaledHeight = originalArtHeight / bgRatio;
-      art.setAttribute('width', scaledWidth);
-      art.setAttribute('height', scaledHeight);
-
-      // Set initial position for front art image using frontBoc and frontOffset
-      if (canvas.dataset.canvas === 'front') {
-        // Y: frontBoc is in inches, convert to px in SVG coordinates
-        const artY = rectY + (frontBoc * imagePPI) / bgRatio;
-        art.setAttribute('y', artY);
-        // X: frontOffset is in inches, convert to px, offset from box center
-        const boxCenterX = rectX + rectWidth / 2;
-        const artWidth = parseFloat(art.getAttribute('width'));
-        const artX = boxCenterX - artWidth / 2 + (frontOffset * imagePPI) / bgRatio;
-        art.setAttribute('x', artX);
-      }
-      // Set initial position for back art image using backBoc and backOffset
-      if (canvas.dataset.canvas === 'back') {
-        // Y: backBoc is in inches, convert to px in SVG coordinates
-        const artY = rectY + (backBoc * imagePPI) / bgRatio;
-        art.setAttribute('y', artY);
-        // X: backOffset is in inches, convert to px, offset from box center
-        const boxCenterX = rectX + rectWidth / 2;
-        const artWidth = parseFloat(art.getAttribute('width'));
-        const artX = boxCenterX - artWidth / 2 + (backOffset * imagePPI) / bgRatio;
-        art.setAttribute('x', artX);
-      }
-    };
+    if (artImg.complete) {
+      sizeAndPositionArt(bgRatio, artImg);
+    } else {
+      artImg.onload = function() {
+        sizeAndPositionArt(bgRatio, artImg);
+      };
+    }
   };
 
   function updateInfoPanel() {
@@ -249,6 +263,29 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('var-backOffset').addEventListener('input', function() {
       updateArtPositionFromInputs('back');
+    });
+
+    // Set overlay images
+    document.querySelectorAll('[data-img-type="front-overlay"]').forEach(el => {
+      el.setAttribute('href', frontOverlayImage);
+    });
+    document.querySelectorAll('[data-img-type="back-overlay"]').forEach(el => {
+      el.setAttribute('href', backOverlayImage);
+    });
+
+    // Set blank color backgrounds
+    const frontBg = document.getElementById('front-blank-bg');
+    if (frontBg) frontBg.setAttribute('fill', blankColor);
+    const backBg = document.getElementById('back-blank-bg');
+    if (backBg) backBg.setAttribute('fill', blankColor);
+
+    // Set blankColor in sidebar
+    const blankColorElem = document.getElementById('var-blankColor');
+    if (blankColorElem) blankColorElem.textContent = blankColor;
+
+    // Set filter background color to match blankColor
+    document.querySelectorAll('filter#conform-front feFlood, filter#conform-back feFlood').forEach(flood => {
+      flood.setAttribute('flood-color', blankColor);
     });
   });
 });

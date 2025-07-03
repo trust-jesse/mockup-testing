@@ -38,3 +38,8 @@ svg {
   width: 600px;
   height: 600px;
 }
+
+[data-img-type="front-overlay"],
+[data-img-type="back-overlay"] {
+  pointer-events: none;
+}
