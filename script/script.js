@@ -5,7 +5,7 @@ const frontMapImage = "https://tds-website.s3.us-east-2.amazonaws.com/client-web
 const backMapImage = "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/5026/back-map.avif";
 const frontOverlayImage = "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/5026/front-overlay.avif";
 const backOverlayImage = "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/5026/back-overlay.avif";
-let blankColor = "#213d4b";
+let blankColor = "#2e146b";
 
 // Placements
 
@@ -273,20 +273,33 @@ window.addEventListener('DOMContentLoaded', () => {
       el.setAttribute('href', backOverlayImage);
     });
 
-    // Set blank color backgrounds
+    // Set blank color backgrounds and filter flood-color on load
     const frontBg = document.getElementById('front-blank-bg');
-    if (frontBg) frontBg.setAttribute('fill', blankColor);
     const backBg = document.getElementById('back-blank-bg');
+    if (frontBg) frontBg.setAttribute('fill', blankColor);
     if (backBg) backBg.setAttribute('fill', blankColor);
-
-    // Set blankColor in sidebar
-    const blankColorElem = document.getElementById('var-blankColor');
-    if (blankColorElem) blankColorElem.textContent = blankColor;
-
-    // Set filter background color to match blankColor
     document.querySelectorAll('filter#conform-front feFlood, filter#conform-back feFlood').forEach(flood => {
       flood.setAttribute('flood-color', blankColor);
     });
+
+    // Set color picker and hex display to blankColor on load
+    const blankColorInput = document.getElementById('var-blankColor');
+    const blankColorHex = document.getElementById('var-blankColorHex');
+    if (blankColorInput) {
+      blankColorInput.value = blankColor;
+      blankColorInput.addEventListener('input', function() {
+        blankColor = blankColorInput.value;
+        if (frontBg) frontBg.setAttribute('fill', blankColor);
+        if (backBg) backBg.setAttribute('fill', blankColor);
+        document.querySelectorAll('filter#conform-front feFlood, filter#conform-back feFlood').forEach(flood => {
+          flood.setAttribute('flood-color', blankColor);
+        });
+        if (blankColorHex) blankColorHex.textContent = blankColor;
+      });
+    }
+    if (blankColorHex) {
+      blankColorHex.textContent = blankColor;
+    }
   });
 });
 
