@@ -2,60 +2,83 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Shirt Mockup</title>
+    <title>Mockup Testing</title>
   <link rel="stylesheet" href="style/style.css">
   <script src="script/script.js" defer></script>
   </head>
   <body>
     <div class="layout">
       <aside class="sidebar">
-        <div class="info-panel">
-          <h2>Art Position Info</h2>
-          <div>Vertical distance (top of art to top of box):<br><span id="vertical-distance-in">0.00</span> in</div>
+        <div class="sidebar-vars">
+          <h3>Front Variables</h3>
+          <ul>
+            <li>frontMapImage: <span id="var-frontMapImage"></span></li>
+            <li>frontOverlayImage: <span id="var-frontOverlayImage"></span></li>
+            <li>frontArtImage: <span id="var-frontArtImage"></span></li>
+            <li>frontBoc: <input id="var-frontBoc" class="boc-input" type="number" step="0.01" /></li>
+            <li>frontOffset: <input id="var-frontOffset" class="offset-input" type="number" step="0.01" /></li>
+          </ul>
           <br>
-          <div>Horizontal distance (center of art to center of box):<br><span id="horizontal-distance-in">0.00</span> in</div>
+          <h3>Back Variables</h3>
+          <ul>
+            <li>backMapImage: <span id="var-backMapImage"></span></li>
+            <li>backOverlayImage: <span id="var-backOverlayImage"></span></li>
+            <li>backArtImage: <span id="var-backArtImage"></span></li>
+            <li>backBoc: <input id="var-backBoc" class="boc-input" type="number" step="0.01" /></li>
+            <li>backOffset: <input id="var-backOffset" class="offset-input" type="number" step="0.01" /></li>
+          </ul>
+          <br>
+          <h3>Global</h3>
+          <ul>
+            <li>imagePPI: <span id="var-imagePPI"></span></li>
+          </ul>
         </div>
       </aside>
       <main class="main-content">
-        <div class="container">
-          <svg viewBox="0 0 400 400">
-            <filter id="conform" x="-100%" y="-100%" width="500%" height="500%">
-          
-              <feImage href="https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/mockup1.webp" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="MAP_RESULT" />
-          
-              <!-- desaturate the image -->
+        <div class="container" style="display: flex; gap: 40px;">
+          <!-- Left Canvas (Front) -->
+          <svg class="mockup-canvas" data-canvas="front" viewBox="0 0 400 400">
+            <filter id="conform-front" x="-100%" y="-100%" width="500%" height="500%">
+              <feImage data-img-type="front-map" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="MAP_RESULT" />
               <feColorMatrix in="MAP_RESULT" type="saturate" values="0" result="MAP_DESATURATE_RESULT" />
-          
-              <!-- decrease level of details so the effect on text is more realistic -->
               <feGaussianBlur in="MAP_DESATURATE_RESULT" stdDeviation="0.5" result="MAP_BLUR_RESULT" />
-          
-              <!-- use the displacement map to distort the text -->
               <feDisplacementMap in="SourceGraphic" in2="MAP_BLUR_RESULT" scale="4" xChannelSelector="R" yChannelSelector="R" result="DISPLACED_TEXT_RESULT" />
-          
-              <!-- add the image as a background behind the text again -->
-              <feImage href="https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/mockup1.webp" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="BG" />
-          
-              <!-- desaturate the text -->
+              <feImage data-img-type="front-map" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="BG" />
               <feColorMatrix in="DISPLACED_TEXT_RESULT" result="TEXTURED_TEXT_2" type="matrix" values="1 0 0 0 0
                       0 1 0 0 0
                       0 0 1 0 0
                       0 0 0 .9 0" />
-          
-              <!--  blend the text with the background image -->
               <feBlend in="BG" in2="TEXTURED_TEXT_2" mode="multiply" result="BLENDED_TEXT" />
-          
-              <!-- layer the text on top of the background image -->
               <feMerge>
                 <feMergeNode in="BG"></feMergeNode>
                 <feMergeNode in="BLENDED_TEXT"></feMergeNode>
               </feMerge>
             </filter>
-          
-            <!-- Static background mockup image -->
-            <image href="https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/mockup1.webp" x="0" y="0" width="400" height="400" preserveAspectRatio="xMidYMid meet" />
-            <!-- Art image, centered and sized at 300x300 -->
-            <image id="draggable-art" href="https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/art.png" x="150" y="150" width="100" height="100" preserveAspectRatio="xMidYMid meet" filter="url(#conform)" />
-            <rect id="constraint-rect" x="125" y="70" width="150" height="200" fill="none" stroke="#e1e1e1" stroke-width="1" />
+            <image data-img-type="front-map" x="0" y="0" width="400" height="400" preserveAspectRatio="xMidYMid meet" />
+            <image id="draggable-art-front" data-img-type="front-art" x="150" y="150" width="100" height="100" preserveAspectRatio="xMidYMid meet" filter="url(#conform-front)" />
+            <rect id="constraint-rect-front" x="125" y="70" width="150" height="200" fill="none" stroke="#e1e1e1" stroke-width="1" />
+          </svg>
+          <!-- Right Canvas (Back) -->
+          <svg class="mockup-canvas" data-canvas="back" viewBox="0 0 400 400">
+            <filter id="conform-back" x="-100%" y="-100%" width="500%" height="500%">
+              <feImage data-img-type="back-map" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="MAP_RESULT" />
+              <feColorMatrix in="MAP_RESULT" type="saturate" values="0" result="MAP_DESATURATE_RESULT" />
+              <feGaussianBlur in="MAP_DESATURATE_RESULT" stdDeviation="0.5" result="MAP_BLUR_RESULT" />
+              <feDisplacementMap in="SourceGraphic" in2="MAP_BLUR_RESULT" scale="4" xChannelSelector="R" yChannelSelector="R" result="DISPLACED_TEXT_RESULT" />
+              <feImage data-img-type="back-map" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="BG" />
+              <feColorMatrix in="DISPLACED_TEXT_RESULT" result="TEXTURED_TEXT_2" type="matrix" values="1 0 0 0 0
+                      0 1 0 0 0
+                      0 0 1 0 0
+                      0 0 0 .9 0" />
+              <feBlend in="BG" in2="TEXTURED_TEXT_2" mode="multiply" result="BLENDED_TEXT" />
+              <feMerge>
+                <feMergeNode in="BG"></feMergeNode>
+                <feMergeNode in="BLENDED_TEXT"></feMergeNode>
+              </feMerge>
+            </filter>
+            <image data-img-type="back-map" x="0" y="0" width="400" height="400" preserveAspectRatio="xMidYMid meet" />
+            <image id="draggable-art-back" data-img-type="back-art" x="150" y="150" width="100" height="100" preserveAspectRatio="xMidYMid meet" filter="url(#conform-back)" />
+            <rect id="constraint-rect-back" x="125" y="70" width="150" height="200" fill="none" stroke="#e1e1e1" stroke-width="1" />
           </svg>
         </div>
       </main>
