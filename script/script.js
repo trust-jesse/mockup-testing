@@ -8,17 +8,27 @@ const backOverlayImage = "https://tds-website.s3.us-east-2.amazonaws.com/client-
 
 // Placements
 
-// Front
+// Front Art
 const isFront = true;
-const frontArtImage = "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/art/front-2.png";
+const frontArtImage = "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/art/front.png";
 let frontBoc = 2.5;
 let frontOffset = 2.5;
 
+// Front Bounding Box
+let frontBoundingBox = {
+  topLeft: { x: 125, y: 70 },
+  bottomRight: { x: 275, y: 270 }
+};
+
 // Back
 const isBack = false;
-const backArtImage = "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/art/back-2.png";
+const backArtImage = "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/art/back.png";
 let backBoc = 3.5;
 let backOffset = 0;
+let backBoundingBox = {
+  topLeft: { x: 125, y: 70 },
+  bottomRight: { x: 275, y: 270 }
+};
 
 // Left Sleeve
 const isLeftSleeve = false;
