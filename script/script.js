@@ -117,20 +117,20 @@ function setupMockupCanvas(canvas) {
     const horizontalDistance = Math.round((artCenterX - boxCenterX) * bgRatio);
     // Only update the info panel if this is the front canvas
     if (canvas.dataset.canvas === 'front') {
-      document.getElementById('vertical-distance-in').textContent = (verticalDistance / imagePPI).toFixed(2);
-      document.getElementById('horizontal-distance-in').textContent = (horizontalDistance / imagePPI).toFixed(2);
-      // Update sidebar boc and offset for front
+      // document.getElementById('vertical-distance-in').textContent = (verticalDistance / imagePPI).toFixed(2);
+      // document.getElementById('horizontal-distance-in').textContent = (horizontalDistance / imagePPI).toFixed(2);
+      // Update sidebar boc and offset for front (input values)
       const bocInches = ((artTop - boxTop) * bgRatio) / imagePPI;
       const offsetInches = ((artCenterX - boxCenterX) * bgRatio) / imagePPI;
-      document.getElementById('var-frontBoc').textContent = bocInches.toFixed(2);
-      document.getElementById('var-frontOffset').textContent = offsetInches.toFixed(2);
+      document.getElementById('var-frontBoc').value = bocInches.toFixed(2);
+      document.getElementById('var-frontOffset').value = offsetInches.toFixed(2);
     }
     if (canvas.dataset.canvas === 'back') {
-      // Update sidebar boc and offset for back
+      // Update sidebar boc and offset for back (input values)
       const bocInches = ((artTop - boxTop) * bgRatio) / imagePPI;
       const offsetInches = ((artCenterX - boxCenterX) * bgRatio) / imagePPI;
-      document.getElementById('var-backBoc').textContent = bocInches.toFixed(2);
-      document.getElementById('var-backOffset').textContent = offsetInches.toFixed(2);
+      document.getElementById('var-backBoc').value = bocInches.toFixed(2);
+      document.getElementById('var-backOffset').value = offsetInches.toFixed(2);
     }
   }
 
