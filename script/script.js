@@ -16,7 +16,7 @@ let blankColor = "#2e146b";
 // Front Art
 const isFront = true;
 const frontArtImage =
-  "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/art/front.png";
+  "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/art/front-72.png";
 let frontBoc = 2;
 let frontOffset = 2;
 
@@ -33,7 +33,7 @@ let frontBoundingBox = {
 // Back
 const isBack = false;
 const backArtImage =
-  "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/art/back-smaller.png";
+  "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/art/back-new.png";
 let backBoc = 2;
 let backOffset = 0;
 
@@ -85,11 +85,22 @@ let bgOriginalHeight = 0;
   function sizeAndPositionArt(bgRatio, artImg) {
     const originalArtWidth = artImg.naturalWidth;
     const originalArtHeight = artImg.naturalHeight;
-    // Scale by bgRatio
+    // Calculate svgToPx ratio (SVG units to rendered pixels)
+    const svgRect = canvas.getBoundingClientRect();
+    let svgToPx = 1;
+    if (canvas.viewBox && canvas.viewBox.baseVal) {
+      svgToPx = svgRect.width / canvas.viewBox.baseVal.width;
+    } else if (canvas.hasAttribute("width")) {
+      svgToPx = svgRect.width / parseFloat(canvas.getAttribute("width"));
+    }
+    // Original scaling: scale art by bgRatio
     const scaledWidth = originalArtWidth / bgRatio;
     const scaledHeight = originalArtHeight / bgRatio;
-    art.setAttribute("width", scaledWidth);
-    art.setAttribute("height", scaledHeight);
+    // Now, convert scaled SVG units to match rendered pixel size
+    const artWidthSvgUnits = scaledWidth / svgToPx;
+    const artHeightSvgUnits = scaledHeight / svgToPx;
+    art.setAttribute("width", artWidthSvgUnits);
+    art.setAttribute("height", artHeightSvgUnits);
     // Always get constraint rect live
     const constraintRect = canvas.querySelector('rect[id^="constraint-rect-"]');
     const rectX = parseFloat(constraintRect.getAttribute("x"));
@@ -102,7 +113,7 @@ let bgOriginalHeight = 0;
       art.setAttribute("y", artY);
       const boxCenterX = rectX + rectWidth / 2;
       const artX =
-        boxCenterX - scaledWidth / 2 + (frontOffset * imagePPI) / bgRatio;
+        boxCenterX - artWidthSvgUnits / 2 + (frontOffset * imagePPI) / bgRatio;
       art.setAttribute("x", artX);
       // Update sidebar with art dimensions in inches
       const widthInches = (originalArtWidth / imagePPI).toFixed(2);
@@ -110,13 +121,33 @@ let bgOriginalHeight = 0;
       const dimsElem = document.getElementById("var-frontArtDims");
       if (dimsElem)
         dimsElem.textContent = `${widthInches} in × ${heightInches} in`;
+      // --- LOGGING: SVG artboard and bounding box pixel dimensions ---
+      // Log SVG artboard rendered pixel dimensions
+      const svgRect = canvas.getBoundingClientRect();
+      // Log bounding box rendered pixel dimensions
+      if (constraintRect) {
+        // SVG units
+        const bboxSvgWidth = rectWidth;
+        const bboxSvgHeight = rectHeight;
+        // Convert SVG units to rendered pixels
+        // Get SVG viewBox and scale
+        let svgToPx = 1;
+        if (canvas.viewBox && canvas.viewBox.baseVal) {
+          svgToPx = svgRect.width / canvas.viewBox.baseVal.width;
+        } else if (canvas.hasAttribute("width")) {
+          svgToPx = svgRect.width / parseFloat(canvas.getAttribute("width"));
+        }
+        const bboxPxWidth = bboxSvgWidth * svgToPx;
+        const bboxPxHeight = bboxSvgHeight * svgToPx;
+      }
+      // --- END LOGGING ---
     }
     if (canvas.dataset.canvas === "back") {
       const artY = rectY + (backBoc * imagePPI) / bgRatio;
       art.setAttribute("y", artY);
       const boxCenterX = rectX + rectWidth / 2;
       const artX =
-        boxCenterX - scaledWidth / 2 + (backOffset * imagePPI) / bgRatio;
+        boxCenterX - artWidthSvgUnits / 2 + (backOffset * imagePPI) / bgRatio;
       art.setAttribute("x", artX);
       // Update sidebar with art dimensions in inches
       const widthInches = (originalArtWidth / imagePPI).toFixed(2);
@@ -124,6 +155,30 @@ let bgOriginalHeight = 0;
       const dimsElem = document.getElementById("var-backArtDims");
       if (dimsElem)
         dimsElem.textContent = `${widthInches} in × ${heightInches} in`;
+    }
+    // Diagnostic logging for art and background sizes
+    if (canvas.dataset.canvas === "front" || canvas.dataset.canvas === "back") {
+      // Background image
+      const bgImgElem = canvas.querySelector('feImage[data-img-type$="map"]');
+      const bgNaturalWidth = bgImg.naturalWidth;
+      const bgNaturalHeight = bgImg.naturalHeight;
+      // Art image
+      const artNaturalWidth = artImg.naturalWidth;
+      const artNaturalHeight = artImg.naturalHeight;
+      // Rendered SVG/canvas
+      const svgRect = canvas.getBoundingClientRect();
+      // Rendered art image
+      const artRenderedWidth = scaledWidth;
+      const artRenderedHeight = scaledHeight;
+      console.log(`[DIAG][${canvas.dataset.canvas}] BG image natural: ${bgNaturalWidth}x${bgNaturalHeight}px, Art image natural: ${artNaturalWidth}x${artNaturalHeight}px`);
+      console.log(`[DIAG][${canvas.dataset.canvas}] SVG rendered: ${svgRect.width}x${svgRect.height}px, Art rendered: ${artRenderedWidth}x${artRenderedHeight}px`);
+      // Log ratio between raw and rendered pixels
+      const bgWidthRatio = bgNaturalWidth / svgRect.width;
+      const bgHeightRatio = bgNaturalHeight / svgRect.height;
+      const artWidthRatio = artNaturalWidth / artRenderedWidth;
+      const artHeightRatio = artNaturalHeight / artRenderedHeight;
+      console.log(`[DIAG][${canvas.dataset.canvas}] BG width ratio (raw/rendered): ${bgWidthRatio.toFixed(3)}, height ratio: ${bgHeightRatio.toFixed(3)}`);
+      console.log(`[DIAG][${canvas.dataset.canvas}] Art width ratio (raw/rendered): ${artWidthRatio.toFixed(3)}, height ratio: ${artHeightRatio.toFixed(3)}`);
     }
   }
 
@@ -141,7 +196,6 @@ const bgImg = new window.Image();
     const renderedWidth = svgElement.getBoundingClientRect().width;
     bgRatio = bgOriginalWidth / renderedWidth;
     const svgWidthInInches = (renderedWidth * bgRatio) / imagePPI;
-    console.log(`[setupMockupCanvas][${canvas.dataset.canvas}] bgOriginalWidth:`, bgOriginalWidth, 'renderedWidth:', renderedWidth, 'bgRatio:', bgRatio, 'svgWidthInInches:', svgWidthInInches);
     // Now load the art image and size/position after it loads
     const artImg = new window.Image();
     artImg.src = art.getAttribute("href");
@@ -425,16 +479,6 @@ window.addEventListener("DOMContentLoaded", () => {
                 const renderedWidth = svgElement.getBoundingClientRect().width;
                 bgRatio = bgOriginalWidth / renderedWidth;
                 const svgWidthInInches = (renderedWidth * bgRatio) / imagePPI;
-                console.log(`[updateBoundingBoxFromInputs][${prefix}] bgOriginalWidth:`, bgOriginalWidth, 'renderedWidth:', renderedWidth, 'bgRatio:', bgRatio, 'svgWidthInInches:', svgWidthInInches);
-                // Log front bounding box values before and after bgRatio
-                if (prefix === "front") {
-                  console.log("Front bounding box (raw):", {
-                    x1: boundingBoxVar.topLeft.x,
-                    y1: boundingBoxVar.topLeft.y,
-                    x2: boundingBoxVar.bottomRight.x,
-                    y2: boundingBoxVar.bottomRight.y,
-                  });
-                }
                 // Apply values divided by bgRatio
                 const x = boundingBoxVar.topLeft.x / bgRatio;
                 const y = boundingBoxVar.topLeft.y / bgRatio;
@@ -444,14 +488,6 @@ window.addEventListener("DOMContentLoaded", () => {
                 const height =
                   (boundingBoxVar.bottomRight.y - boundingBoxVar.topLeft.y) /
                   bgRatio;
-                if (prefix === "front") {
-                  console.log("Front bounding box (SVG coords):", {
-                    x1: x,
-                    y1: y,
-                    x2: x + width,
-                    y2: y + height,
-                  });
-                }
                 if (rect) {
                   rect.setAttribute("x", x);
                   rect.setAttribute("y", y);
@@ -463,17 +499,22 @@ window.addEventListener("DOMContentLoaded", () => {
                   `var-${prefix}BoundingBoxDims`
                 );
                 if (dimsElem) {
-                  // SVG units (rounded to 1 decimal), inches (rounded to 2 decimals)
-                  const widthInches = ((width * bgRatio) / imagePPI).toFixed(2);
-                  const heightInches = ((height * bgRatio) / imagePPI).toFixed(
-                    2
-                  );
-                  dimsElem.textContent = `w: ${width.toFixed(
-                    1
-                  )} × h: ${height.toFixed(
-                    1
-                  )} (${widthInches} in × ${heightInches} in)`;
-    }
+                  // Calculate rendered pixel width and height
+                  let svgToPx = 1;
+                  const svgRect = canvas.getBoundingClientRect();
+                  if (canvas.viewBox && canvas.viewBox.baseVal) {
+                    svgToPx = svgRect.width / canvas.viewBox.baseVal.width;
+                  } else if (canvas.hasAttribute("width")) {
+                    svgToPx = svgRect.width / parseFloat(canvas.getAttribute("width"));
+                  }
+                  const bboxPxWidth = width * svgToPx;
+                  const bboxPxHeight = height * svgToPx;
+                  // Calculate inches from rendered pixels, bgRatio, and imagePPI
+                  // renderedPixels * bgRatio = original image pixels, then / imagePPI = inches
+                  const widthInches = ((bboxPxWidth * bgRatio) / imagePPI).toFixed(2);
+                  const heightInches = ((bboxPxHeight * bgRatio) / imagePPI).toFixed(2);
+                  dimsElem.textContent = `w: ${Math.round(bboxPxWidth)}px × h: ${Math.round(bboxPxHeight)}px (${widthInches} in × ${heightInches} in)`;
+                }
               };
             }
           }
@@ -524,7 +565,6 @@ function updateArtPositionFromInputs(which) {
     const renderedWidth = svgElement.getBoundingClientRect().width;
     const bgRatio = bgOriginalWidth / renderedWidth;
     const svgWidthInInches = (renderedWidth * bgRatio) / imagePPI;
-    console.log(`[updateArtPositionFromInputs][${which}] bgOriginalWidth:`, bgOriginalWidth, 'renderedWidth:', renderedWidth, 'bgRatio:', bgRatio, 'svgWidthInInches:', svgWidthInInches);
     // Get art width
     const artWidth = parseFloat(art.getAttribute("width"));
     // Get values from inputs
