@@ -31,7 +31,7 @@ let frontBoundingBox = {
 // };
 
 // Back
-const isBack = false;
+const isBack = true;
 const backArtImage =
   "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/art/back-new.png";
 let backBoc = 2;
@@ -48,7 +48,30 @@ let backBoundingBox = {
 // };
 
 // Left Sleeve
-const isLeftSleeve = false;
+const isLeftSleeve = true;
+const leftSleeveArtImage =
+  "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/art/front-72.png";
+// let leftSleeveBoc = 2.6;
+// let leftSleeveOffset = .6;
+// let leftSleeveRotation = -10;
+let leftSleeveFrontBoc = 2.6;
+let leftSleeveFrontOffset = .6;
+let leftSleeveFrontRotation = -10;
+let leftSleeveBackBoc = 2.5;
+let leftSleeveBackOffset = -.6;
+let leftSleeveBackRotation = 20;
+
+// Left Sleeve Bounding Box
+let leftSleeveBoundingBox = {
+  topLeft: { x: 1136, y: 351 },
+  bottomRight: { x: 1393, y: 711 },
+};
+
+// Left Sleeve Bounding Box (Back)
+let leftSleeveBackBoundingBox = {
+  topLeft: { x: 309, y: 365 },
+  bottomRight: { x: 500, y: 718 },
+};
 
 // Right Sleeve
 const isRightSleeve = false;
@@ -156,29 +179,246 @@ let bgOriginalHeight = 0;
       if (dimsElem)
         dimsElem.textContent = `${widthInches} in × ${heightInches} in`;
     }
-    // Diagnostic logging for art and background sizes
-    if (canvas.dataset.canvas === "front" || canvas.dataset.canvas === "back") {
-      // Background image
-      const bgImgElem = canvas.querySelector('feImage[data-img-type$="map"]');
-      const bgNaturalWidth = bgImg.naturalWidth;
-      const bgNaturalHeight = bgImg.naturalHeight;
-      // Art image
-      const artNaturalWidth = artImg.naturalWidth;
-      const artNaturalHeight = artImg.naturalHeight;
-      // Rendered SVG/canvas
-      const svgRect = canvas.getBoundingClientRect();
-      // Rendered art image
-      const artRenderedWidth = scaledWidth;
-      const artRenderedHeight = scaledHeight;
-      console.log(`[DIAG][${canvas.dataset.canvas}] BG image natural: ${bgNaturalWidth}x${bgNaturalHeight}px, Art image natural: ${artNaturalWidth}x${artNaturalHeight}px`);
-      console.log(`[DIAG][${canvas.dataset.canvas}] SVG rendered: ${svgRect.width}x${svgRect.height}px, Art rendered: ${artRenderedWidth}x${artRenderedHeight}px`);
-      // Log ratio between raw and rendered pixels
-      const bgWidthRatio = bgNaturalWidth / svgRect.width;
-      const bgHeightRatio = bgNaturalHeight / svgRect.height;
-      const artWidthRatio = artNaturalWidth / artRenderedWidth;
-      const artHeightRatio = artNaturalHeight / artRenderedHeight;
-      console.log(`[DIAG][${canvas.dataset.canvas}] BG width ratio (raw/rendered): ${bgWidthRatio.toFixed(3)}, height ratio: ${bgHeightRatio.toFixed(3)}`);
-      console.log(`[DIAG][${canvas.dataset.canvas}] Art width ratio (raw/rendered): ${artWidthRatio.toFixed(3)}, height ratio: ${artHeightRatio.toFixed(3)}`);
+    // Add left sleeve art to the front mockup
+    if (canvas.dataset.canvas === "front" && isLeftSleeve) {
+      // Create or select the left sleeve art image element
+      let leftSleeveArt = canvas.querySelector('image[id="draggable-art-leftsleeve"]');
+      if (!leftSleeveArt) {
+        leftSleeveArt = document.createElementNS("http://www.w3.org/2000/svg", "image");
+        leftSleeveArt.setAttribute("id", "draggable-art-leftsleeve");
+        leftSleeveArt.setAttribute("href", leftSleeveArtImage);
+        leftSleeveArt.setAttribute("data-img-type", "leftsleeve-art");
+        // Insert after the main art image for correct stacking
+        const mainArt = canvas.querySelector('image[id^="draggable-art-"]');
+        if (mainArt && mainArt.nextSibling) {
+          canvas.insertBefore(leftSleeveArt, mainArt.nextSibling);
+        } else {
+          canvas.appendChild(leftSleeveArt);
+        }
+      }
+      // Load the left sleeve art image to get its natural size
+      const leftSleeveImg = new window.Image();
+      leftSleeveImg.src = leftSleeveArtImage;
+      leftSleeveImg.onload = function () {
+        const originalArtWidth = leftSleeveImg.naturalWidth;
+        const originalArtHeight = leftSleeveImg.naturalHeight;
+        // Use front bgRatio for scaling
+        const feMap = canvas.querySelector('feImage[data-img-type$="map"]');
+        const bgImg = new window.Image();
+        bgImg.src = feMap ? feMap.getAttribute("href") : "";
+        bgImg.onload = function () {
+          const bgOriginalWidth = bgImg.naturalWidth;
+          const renderedWidth = svgRect.width;
+          const bgRatio = bgOriginalWidth / renderedWidth;
+          // Calculate svgToPx ratio (SVG units to rendered pixels)
+          let svgToPx = 1;
+          if (canvas.viewBox && canvas.viewBox.baseVal) {
+            svgToPx = svgRect.width / canvas.viewBox.baseVal.width;
+          } else if (canvas.hasAttribute("width")) {
+            svgToPx = svgRect.width / parseFloat(canvas.getAttribute("width"));
+          }
+          // Scale and convert to SVG units
+          const scaledWidth = originalArtWidth / bgRatio;
+          const scaledHeight = originalArtHeight / bgRatio;
+          const artWidthSvgUnits = scaledWidth / svgToPx;
+          const artHeightSvgUnits = scaledHeight / svgToPx;
+          leftSleeveArt.setAttribute("width", artWidthSvgUnits);
+          leftSleeveArt.setAttribute("height", artHeightSvgUnits);
+          // Place using leftSleeveFrontBoc, leftSleeveFrontOffset, leftSleeveFrontRotation
+          const boc = leftSleeveFrontBoc;
+          const offset = leftSleeveFrontOffset;
+          const rotation = leftSleeveFrontRotation;
+          // Use left sleeve bounding box for now
+          const constraintRect = canvas.querySelector('#constraint-rect-leftsleeve');
+          const rectX = parseFloat(constraintRect.getAttribute("x"));
+          const rectY = parseFloat(constraintRect.getAttribute("y"));
+          const rectWidth = parseFloat(constraintRect.getAttribute("width"));
+          // Vertical position
+          const artY = rectY + (boc * imagePPI) / bgRatio;
+          leftSleeveArt.setAttribute("y", artY);
+          // Horizontal position (centered, then offset)
+          const boxCenterX = rectX + rectWidth / 2;
+          const artX = boxCenterX - artWidthSvgUnits / 2 + (offset * imagePPI) / bgRatio;
+          leftSleeveArt.setAttribute("x", artX);
+          // Apply rotation around the center of the art
+          const cx = artX + artWidthSvgUnits / 2;
+          const cy = artY + artHeightSvgUnits / 2;
+          leftSleeveArt.setAttribute("transform", `rotate(${rotation},${cx},${cy})`);
+        };
+      };
+    }
+    // Add left sleeve art to the back mockup
+    if (canvas.dataset.canvas === "back" && isLeftSleeve) {
+      // Create or select the left sleeve art image element
+      let leftSleeveArt = canvas.querySelector('image[id="draggable-art-leftsleeve-back"]');
+      if (!leftSleeveArt) {
+        leftSleeveArt = document.createElementNS("http://www.w3.org/2000/svg", "image");
+        leftSleeveArt.setAttribute("id", "draggable-art-leftsleeve-back");
+        leftSleeveArt.setAttribute("href", leftSleeveArtImage);
+        leftSleeveArt.setAttribute("data-img-type", "leftsleeve-art-back");
+        // Insert after the main art image for correct stacking
+        const mainArt = canvas.querySelector('image[id^="draggable-art-"]');
+        if (mainArt && mainArt.nextSibling) {
+          canvas.insertBefore(leftSleeveArt, mainArt.nextSibling);
+        } else {
+          canvas.appendChild(leftSleeveArt);
+        }
+      }
+      // Load the left sleeve art image to get its natural size
+      const leftSleeveImg = new window.Image();
+      leftSleeveImg.src = leftSleeveArtImage;
+      leftSleeveImg.onload = function () {
+        const originalArtWidth = leftSleeveImg.naturalWidth;
+        const originalArtHeight = leftSleeveImg.naturalHeight;
+        // Use back bgRatio for scaling
+        const feMap = canvas.querySelector('feImage[data-img-type$="map"]');
+        const bgImg = new window.Image();
+        bgImg.src = feMap ? feMap.getAttribute("href") : "";
+        bgImg.onload = function () {
+          const bgOriginalWidth = bgImg.naturalWidth;
+          const renderedWidth = svgRect.width;
+          const bgRatio = bgOriginalWidth / renderedWidth;
+          // Calculate svgToPx ratio (SVG units to rendered pixels)
+          let svgToPx = 1;
+          if (canvas.viewBox && canvas.viewBox.baseVal) {
+            svgToPx = svgRect.width / canvas.viewBox.baseVal.width;
+          } else if (canvas.hasAttribute("width")) {
+            svgToPx = svgRect.width / parseFloat(canvas.getAttribute("width"));
+          }
+          // Scale and convert to SVG units
+          const scaledWidth = originalArtWidth / bgRatio;
+          const scaledHeight = originalArtHeight / bgRatio;
+          const artWidthSvgUnits = scaledWidth / svgToPx;
+          const artHeightSvgUnits = scaledHeight / svgToPx;
+          leftSleeveArt.setAttribute("width", artWidthSvgUnits);
+          leftSleeveArt.setAttribute("height", artHeightSvgUnits);
+          // Place using leftSleeveBackBoc, leftSleeveBackOffset, leftSleeveBackRotation
+          const boc = leftSleeveBackBoc;
+          const offset = leftSleeveBackOffset;
+          const rotation = leftSleeveBackRotation;
+          // Use left sleeve bounding box for now
+          const constraintRect = canvas.querySelector('#constraint-rect-leftsleeve');
+          const rectX = parseFloat(constraintRect.getAttribute("x"));
+          const rectY = parseFloat(constraintRect.getAttribute("y"));
+          const rectWidth = parseFloat(constraintRect.getAttribute("width"));
+          // Vertical position
+          const artY = rectY + (boc * imagePPI) / bgRatio;
+          leftSleeveArt.setAttribute("y", artY);
+          // Horizontal position (centered, then offset)
+          const boxCenterX = rectX + rectWidth / 2;
+          const artX = boxCenterX - artWidthSvgUnits / 2 + (offset * imagePPI) / bgRatio;
+          leftSleeveArt.setAttribute("x", artX);
+          // Apply rotation around the center of the art
+          const cx = artX + artWidthSvgUnits / 2;
+          const cy = artY + artHeightSvgUnits / 2;
+          leftSleeveArt.setAttribute("transform", `rotate(${rotation},${cx},${cy})`);
+        };
+      };
+      // Add drag event listeners for left sleeve art (back)
+      let isDraggingLeftSleeveBack = false;
+      let offsetLeftSleeveBack = { x: 0, y: 0 };
+      leftSleeveArt.addEventListener("mousedown", (e) => {
+        isDraggingLeftSleeveBack = true;
+        const svg = leftSleeveArt.ownerSVGElement;
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
+        offsetLeftSleeveBack.x = cursorpt.x - parseFloat(leftSleeveArt.getAttribute("x"));
+        offsetLeftSleeveBack.y = cursorpt.y - parseFloat(leftSleeveArt.getAttribute("y"));
+        e.stopPropagation();
+      });
+      document.addEventListener("mousemove", (e) => {
+        if (!isDraggingLeftSleeveBack) return;
+        const svg = leftSleeveArt.ownerSVGElement;
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
+        let newX = cursorpt.x - offsetLeftSleeveBack.x;
+        let newY = cursorpt.y - offsetLeftSleeveBack.y;
+        leftSleeveArt.setAttribute("x", newX);
+        leftSleeveArt.setAttribute("y", newY);
+        // Update rotation center
+        const artWidth = parseFloat(leftSleeveArt.getAttribute("width"));
+        const artHeight = parseFloat(leftSleeveArt.getAttribute("height"));
+        const cx = newX + artWidth / 2;
+        const cy = newY + artHeight / 2;
+        leftSleeveArt.setAttribute("transform", `rotate(${rotation},${cx},${cy})`);
+      });
+      document.addEventListener("mouseup", () => {
+        isDraggingLeftSleeveBack = false;
+      });
+    }
+    // --- Left Sleeve Drag State ---
+    let isDraggingLeftSleeve = false;
+    let offsetLeftSleeve = { x: 0, y: 0 };
+
+    // Add drag event listeners for left sleeve art
+    if (canvas.dataset.canvas === "front" && isLeftSleeve) {
+      let leftSleeveArt = canvas.querySelector('image[id="draggable-art-leftsleeve"]');
+      if (leftSleeveArt) {
+        leftSleeveArt.addEventListener("mousedown", (e) => {
+          isDraggingLeftSleeve = true;
+          const svg = leftSleeveArt.ownerSVGElement;
+          const pt = svg.createSVGPoint();
+          pt.x = e.clientX;
+          pt.y = e.clientY;
+          const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
+          offsetLeftSleeve.x = cursorpt.x - parseFloat(leftSleeveArt.getAttribute("x"));
+          offsetLeftSleeve.y = cursorpt.y - parseFloat(leftSleeveArt.getAttribute("y"));
+          e.stopPropagation();
+        });
+        document.addEventListener("mousemove", (e) => {
+          if (!isDraggingLeftSleeve) return;
+          const svg = leftSleeveArt.ownerSVGElement;
+          const pt = svg.createSVGPoint();
+          pt.x = e.clientX;
+          pt.y = e.clientY;
+          const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
+          // Constrain to bounding box if needed (optional)
+          let newX = cursorpt.x - offsetLeftSleeve.x;
+          let newY = cursorpt.y - offsetLeftSleeve.y;
+          leftSleeveArt.setAttribute("x", newX);
+          leftSleeveArt.setAttribute("y", newY);
+          // Update rotation center
+          const artWidth = parseFloat(leftSleeveArt.getAttribute("width"));
+          const artHeight = parseFloat(leftSleeveArt.getAttribute("height"));
+          const cx = newX + artWidth / 2;
+          const cy = newY + artHeight / 2;
+          leftSleeveArt.setAttribute("transform", `rotate(${leftSleeveFrontRotation},${cx},${cy})`);
+        });
+        document.addEventListener("mouseup", () => {
+          isDraggingLeftSleeve = false;
+        });
+      }
+    }
+    // --- Left Sleeve Controls (to be added in HTML) ---
+    // Add listeners for left sleeve controls
+    const bocInput = document.getElementById("var-leftSleeveBoc");
+    const offsetInput = document.getElementById("var-leftSleeveOffset");
+    const rotationInput = document.getElementById("var-leftSleeveRotation");
+    if (bocInput) {
+      bocInput.value = leftSleeveFrontBoc;
+      bocInput.addEventListener("input", function () {
+        leftSleeveFrontBoc = parseFloat(bocInput.value) || 0;
+        // Re-render art
+        document.querySelectorAll(".mockup-canvas").forEach(setupMockupCanvas);
+      });
+    }
+    if (offsetInput) {
+      offsetInput.value = leftSleeveFrontOffset;
+      offsetInput.addEventListener("input", function () {
+        leftSleeveFrontOffset = parseFloat(offsetInput.value) || 0;
+        document.querySelectorAll(".mockup-canvas").forEach(setupMockupCanvas);
+      });
+    }
+    if (rotationInput) {
+      rotationInput.value = leftSleeveFrontRotation;
+      rotationInput.addEventListener("input", function () {
+        leftSleeveFrontRotation = parseFloat(rotationInput.value) || 0;
+        document.querySelectorAll(".mockup-canvas").forEach(setupMockupCanvas);
+      });
     }
   }
 
@@ -542,6 +782,174 @@ window.addEventListener("DOMContentLoaded", () => {
       "constraint-rect-back",
       '.mockup-canvas[data-canvas="back"]'
     );
+
+    // --- Left Sleeve Bounding Box Controls ---
+    const x1Input = document.getElementById("var-leftSleeveBoundingBox-x1");
+    const y1Input = document.getElementById("var-leftSleeveBoundingBox-y1");
+    const x2Input = document.getElementById("var-leftSleeveBoundingBox-x2");
+    const y2Input = document.getElementById("var-leftSleeveBoundingBox-y2");
+    if (x1Input && y1Input && x2Input && y2Input) {
+      x1Input.value = leftSleeveBoundingBox.topLeft.x;
+      y1Input.value = leftSleeveBoundingBox.topLeft.y;
+      x2Input.value = leftSleeveBoundingBox.bottomRight.x;
+      y2Input.value = leftSleeveBoundingBox.bottomRight.y;
+      function updateLeftSleeveBoundingBoxFromInputs() {
+        leftSleeveBoundingBox.topLeft.x = parseInt(x1Input.value, 10) || 0;
+        leftSleeveBoundingBox.topLeft.y = parseInt(y1Input.value, 10) || 0;
+        leftSleeveBoundingBox.bottomRight.x = parseInt(x2Input.value, 10) || 0;
+        leftSleeveBoundingBox.bottomRight.y = parseInt(y2Input.value, 10) || 0;
+        // Update the SVG rect for left sleeve bounding box if present
+        const rect = document.getElementById("constraint-rect-leftsleeve");
+        const canvas = document.querySelector('.mockup-canvas[data-canvas="front"]');
+        // Calculate bgRatio for this canvas
+        let bgRatio = 1;
+        if (canvas) {
+          const feMap = canvas.querySelector('feImage[data-img-type$="map"]');
+          const bgHref = feMap ? feMap.getAttribute("href") : undefined;
+          if (bgHref) {
+            const bgImg = new window.Image();
+            bgImg.src = bgHref;
+            bgImg.onload = function () {
+              const bgOriginalWidth = bgImg.naturalWidth;
+              const svgElement = canvas;
+              const renderedWidth = svgElement.getBoundingClientRect().width;
+              bgRatio = bgOriginalWidth / renderedWidth;
+              // Apply values divided by bgRatio
+              const x = leftSleeveBoundingBox.topLeft.x / bgRatio;
+              const y = leftSleeveBoundingBox.topLeft.y / bgRatio;
+              const width = (leftSleeveBoundingBox.bottomRight.x - leftSleeveBoundingBox.topLeft.x) / bgRatio;
+              const height = (leftSleeveBoundingBox.bottomRight.y - leftSleeveBoundingBox.topLeft.y) / bgRatio;
+              if (rect) {
+                rect.setAttribute("x", x);
+                rect.setAttribute("y", y);
+                rect.setAttribute("width", width);
+                rect.setAttribute("height", height);
+              }
+              // Re-render art
+              document.querySelectorAll(".mockup-canvas").forEach(setupMockupCanvas);
+            };
+          }
+        }
+      }
+      x1Input.addEventListener("input", updateLeftSleeveBoundingBoxFromInputs);
+      y1Input.addEventListener("input", updateLeftSleeveBoundingBoxFromInputs);
+      x2Input.addEventListener("input", updateLeftSleeveBoundingBoxFromInputs);
+      y2Input.addEventListener("input", updateLeftSleeveBoundingBoxFromInputs);
+      // Initial update
+      updateLeftSleeveBoundingBoxFromInputs();
+    }
+    // --- Back Left Sleeve Bounding Box Controls ---
+    const bx1Input = document.getElementById("var-leftSleeveBackBoundingBox-x1");
+    const by1Input = document.getElementById("var-leftSleeveBackBoundingBox-y1");
+    const bx2Input = document.getElementById("var-leftSleeveBackBoundingBox-x2");
+    const by2Input = document.getElementById("var-leftSleeveBackBoundingBox-y2");
+    if (bx1Input && by1Input && bx2Input && by2Input) {
+      bx1Input.value = leftSleeveBackBoundingBox.topLeft.x;
+      by1Input.value = leftSleeveBackBoundingBox.topLeft.y;
+      bx2Input.value = leftSleeveBackBoundingBox.bottomRight.x;
+      by2Input.value = leftSleeveBackBoundingBox.bottomRight.y;
+      function updateLeftSleeveBackBoundingBoxFromInputs() {
+        leftSleeveBackBoundingBox.topLeft.x = parseInt(bx1Input.value, 10) || 0;
+        leftSleeveBackBoundingBox.topLeft.y = parseInt(by1Input.value, 10) || 0;
+        leftSleeveBackBoundingBox.bottomRight.x = parseInt(bx2Input.value, 10) || 0;
+        leftSleeveBackBoundingBox.bottomRight.y = parseInt(by2Input.value, 10) || 0;
+        // Update the SVG rect for back left sleeve bounding box if present
+        const rect = document.querySelector('.mockup-canvas[data-canvas="back"] #constraint-rect-leftsleeve');
+        const canvas = document.querySelector('.mockup-canvas[data-canvas="back"]');
+        // Calculate bgRatio for this canvas
+        let bgRatio = 1;
+        if (canvas) {
+          const feMap = canvas.querySelector('feImage[data-img-type$="map"]');
+          const bgHref = feMap ? feMap.getAttribute("href") : undefined;
+          if (bgHref) {
+            const bgImg = new window.Image();
+            bgImg.src = bgHref;
+            bgImg.onload = function () {
+              const bgOriginalWidth = bgImg.naturalWidth;
+              const svgElement = canvas;
+              const renderedWidth = svgElement.getBoundingClientRect().width;
+              bgRatio = bgOriginalWidth / renderedWidth;
+              // Apply values divided by bgRatio
+              const x = leftSleeveBackBoundingBox.topLeft.x / bgRatio;
+              const y = leftSleeveBackBoundingBox.topLeft.y / bgRatio;
+              const width = (leftSleeveBackBoundingBox.bottomRight.x - leftSleeveBackBoundingBox.topLeft.x) / bgRatio;
+              const height = (leftSleeveBackBoundingBox.bottomRight.y - leftSleeveBackBoundingBox.topLeft.y) / bgRatio;
+              if (rect) {
+                rect.setAttribute("x", x);
+                rect.setAttribute("y", y);
+                rect.setAttribute("width", width);
+                rect.setAttribute("height", height);
+              }
+              // Re-render art
+              const backCanvas = document.querySelector('.mockup-canvas[data-canvas="back"]');
+              if (backCanvas) setupMockupCanvas(backCanvas);
+            };
+          }
+        }
+      }
+      bx1Input.addEventListener("input", updateLeftSleeveBackBoundingBoxFromInputs);
+      by1Input.addEventListener("input", updateLeftSleeveBackBoundingBoxFromInputs);
+      bx2Input.addEventListener("input", updateLeftSleeveBackBoundingBoxFromInputs);
+      by2Input.addEventListener("input", updateLeftSleeveBackBoundingBoxFromInputs);
+      // Initial update
+      updateLeftSleeveBackBoundingBoxFromInputs();
+    }
+    // --- Left Sleeve Controls (to be added in HTML) ---
+    // Add listeners for left sleeve controls
+    const bocInput = document.getElementById("var-leftSleeveBoc");
+    const offsetInput = document.getElementById("var-leftSleeveOffset");
+    const rotationInput = document.getElementById("var-leftSleeveRotation");
+    if (bocInput) {
+      bocInput.value = leftSleeveFrontBoc;
+      bocInput.addEventListener("input", function () {
+        leftSleeveFrontBoc = parseFloat(bocInput.value) || 0;
+        // Re-render art
+        document.querySelectorAll(".mockup-canvas").forEach(setupMockupCanvas);
+      });
+    }
+    if (offsetInput) {
+      offsetInput.value = leftSleeveFrontOffset;
+      offsetInput.addEventListener("input", function () {
+        leftSleeveFrontOffset = parseFloat(offsetInput.value) || 0;
+        document.querySelectorAll(".mockup-canvas").forEach(setupMockupCanvas);
+      });
+    }
+    if (rotationInput) {
+      rotationInput.value = leftSleeveFrontRotation;
+      rotationInput.addEventListener("input", function () {
+        leftSleeveFrontRotation = parseFloat(rotationInput.value) || 0;
+        document.querySelectorAll(".mockup-canvas").forEach(setupMockupCanvas);
+      });
+    }
+    // --- Back Left Sleeve Controls ---
+    const backBocInput = document.getElementById("var-leftSleeveBackBoc");
+    const backOffsetInput = document.getElementById("var-leftSleeveBackOffset");
+    const backRotationInput = document.getElementById("var-leftSleeveBackRotation");
+    if (backBocInput) {
+      backBocInput.value = leftSleeveBackBoc;
+      backBocInput.addEventListener("input", function () {
+        leftSleeveBackBoc = parseFloat(backBocInput.value) || 0;
+        // Only re-render the back canvas
+        const backCanvas = document.querySelector('.mockup-canvas[data-canvas="back"]');
+        if (backCanvas) setupMockupCanvas(backCanvas);
+      });
+    }
+    if (backOffsetInput) {
+      backOffsetInput.value = leftSleeveBackOffset;
+      backOffsetInput.addEventListener("input", function () {
+        leftSleeveBackOffset = parseFloat(backOffsetInput.value) || 0;
+        const backCanvas = document.querySelector('.mockup-canvas[data-canvas="back"]');
+        if (backCanvas) setupMockupCanvas(backCanvas);
+      });
+    }
+    if (backRotationInput) {
+      backRotationInput.value = leftSleeveBackRotation;
+      backRotationInput.addEventListener("input", function () {
+        leftSleeveBackRotation = parseFloat(backRotationInput.value) || 0;
+        const backCanvas = document.querySelector('.mockup-canvas[data-canvas="back"]');
+        if (backCanvas) setupMockupCanvas(backCanvas);
+      });
+    }
   });
 });
 
