@@ -1,13 +1,13 @@
 // Variables from SalesForce
 
 // Mockup Images
-const frontMapImage =
+let frontMapImage =
   "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/5026/front-72.jpg";
-const backMapImage =
+let backMapImage =
   "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/5026/back-72.jpg";
-const frontOverlayImage =
+let frontOverlayImage =
   "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/5026/front-72.png";
-const backOverlayImage =
+let backOverlayImage =
   "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/5026/back-72.png";
 let blankColor = "#2e146b";
 
@@ -15,7 +15,7 @@ let blankColor = "#2e146b";
 
 // Front Art
 const isFront = true;
-const frontArtImage =
+let frontArtImage =
   "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/art/front-72.png";
 let frontBoc = 2;
 let frontOffset = 2;
@@ -25,14 +25,10 @@ let frontBoundingBox = {
   topLeft: { x: 516, y: 272 },
   bottomRight: { x: 1122, y: 1300 },
 };
-// let frontBoundingBox = {
-//   topLeft: { x: 680, y: 400 },
-//   bottomRight: { x: 1400, y: 1500 }
-// };
 
 // Back
 const isBack = true;
-const backArtImage =
+let backArtImage =
   "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/art/back-new.png";
 let backBoc = 2;
 let backOffset = 0;
@@ -42,18 +38,11 @@ let backBoundingBox = {
   topLeft: { x: 533, y: 218 },
   bottomRight: { x: 1111, y: 1300 },
 };
-// let backBoundingBox = {
-//   topLeft: { x: 125, y: 70 },
-//   bottomRight: { x: 275, y: 270 }
-// };
 
 // Left Sleeve
 const isLeftSleeve = true;
-const leftSleeveArtImage =
+let leftSleeveArtImage =
   "https://tds-website.s3.us-east-2.amazonaws.com/client-websites/realthread/mockup-testing/art/front-72.png";
-// let leftSleeveBoc = 2.6;
-// let leftSleeveOffset = .6;
-// let leftSleeveRotation = -10;
 let leftSleeveFrontBoc = 2.6;
 let leftSleeveFrontOffset = .6;
 let leftSleeveFrontRotation = -10;
@@ -81,16 +70,6 @@ const isTag = false;
 
 // Image PPI
 const imagePPI = 72;
-
-// fetch(url)
-//   .then((response) => response.blob())
-//   .then((blob) => {
-//     const objURL = URL.createObjectURL(blob);
-
-//     feImages.forEach((feImage) => {
-//       feImage.setAttribute("href", objURL);
-//     });
-//   });
 
 // Utility to set up a mockup canvas (front or back)
 function setupMockupCanvas(canvas) {
@@ -558,6 +537,99 @@ function fetchAndSetMockupImages() {
   return Promise.all([frontPromise, backPromise]);
 }
 
+// Function to update image URL and refresh canvases
+function updateImage(imageType, newUrl) {
+  if (!newUrl || newUrl.trim() === '') {
+    alert('Please enter a valid URL');
+    return;
+  }
+
+  const trimmedUrl = newUrl.trim();
+
+  // Update the global variable
+  switch (imageType) {
+    case 'frontArt':
+      frontArtImage = trimmedUrl;
+      break;
+    case 'backArt':
+      backArtImage = trimmedUrl;
+      break;
+    case 'leftSleeveArt':
+      leftSleeveArtImage = trimmedUrl;
+      break;
+    case 'frontMap':
+      frontMapImage = trimmedUrl;
+      break;
+    case 'backMap':
+      backMapImage = trimmedUrl;
+      break;
+    case 'frontOverlay':
+      frontOverlayImage = trimmedUrl;
+      break;
+    case 'backOverlay':
+      backOverlayImage = trimmedUrl;
+      break;
+    default:
+      console.error('Unknown image type:', imageType);
+      return;
+  }
+
+  // Update the image elements based on type
+  if (imageType === 'leftSleeveArt') {
+    // Update left sleeve art elements by their specific IDs
+    const leftSleeveFront = document.getElementById('draggable-art-leftsleeve');
+    const leftSleeveBack = document.getElementById('draggable-art-leftsleeve-back');
+    
+    if (leftSleeveFront) {
+      leftSleeveFront.setAttribute("href", trimmedUrl);
+    }
+    if (leftSleeveBack) {
+      leftSleeveBack.setAttribute("href", trimmedUrl);
+    }
+  } else if (imageType === 'frontArt' || imageType === 'backArt') {
+    // Update main art elements by data-img-type
+    const artType = imageType.replace('Art', '').toLowerCase();
+    const artElements = document.querySelectorAll(`[data-img-type="${artType}-art"]`);
+    artElements.forEach(element => {
+      element.setAttribute("href", trimmedUrl);
+    });
+  } else if (imageType === 'frontMap' || imageType === 'backMap') {
+    // Update map elements by data-img-type
+    const mapType = imageType.replace('Map', '').toLowerCase();
+    const mapElements = document.querySelectorAll(`[data-img-type="${mapType}-map"]`);
+    mapElements.forEach(element => {
+      element.setAttribute("href", trimmedUrl);
+    });
+  } else if (imageType === 'frontOverlay' || imageType === 'backOverlay') {
+    // Update overlay elements by data-img-type
+    const overlayType = imageType.replace('Overlay', '').toLowerCase();
+    const overlayElements = document.querySelectorAll(`[data-img-type="${overlayType}-overlay"]`);
+    overlayElements.forEach(element => {
+      element.setAttribute("href", trimmedUrl);
+    });
+  }
+
+  // Update the sidebar link
+  const linkElement = document.getElementById(`var-${imageType}`);
+  if (linkElement) {
+    linkElement.href = trimmedUrl;
+    linkElement.textContent = "link";
+  }
+
+  // Clear the input field
+  const inputElement = document.getElementById(`var-${imageType}Input`);
+  if (inputElement) {
+    inputElement.value = '';
+  }
+
+  // Refresh all canvases after a short delay to ensure the new image is loaded
+  setTimeout(() => {
+    document.querySelectorAll(".mockup-canvas").forEach(setupMockupCanvas);
+  }, 100);
+
+  console.log(`Updated ${imageType} image to:`, trimmedUrl);
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   // Fetch and set the mockup images, then set art images and set up canvases
   fetchAndSetMockupImages().then(() => {
@@ -600,6 +672,11 @@ window.addEventListener("DOMContentLoaded", () => {
       backArtElem.href = backArtImage;
       backArtElem.textContent = "link";
     }
+    const leftSleeveArtElem = document.getElementById("var-leftSleeveArtImage");
+    if (leftSleeveArtElem) {
+      leftSleeveArtElem.href = leftSleeveArtImage;
+      leftSleeveArtElem.textContent = "link";
+    }
     document.getElementById("var-frontBoc").textContent = frontBoc;
     document.getElementById("var-frontOffset").textContent = frontOffset;
     document.getElementById("var-backBoc").textContent = backBoc;
@@ -633,6 +710,133 @@ window.addEventListener("DOMContentLoaded", () => {
       .addEventListener("input", function () {
         updateArtPositionFromInputs("back");
       });
+
+    // Add listeners for art image URL updates
+    const frontArtUpdateBtn = document.getElementById("var-frontArtImageUpdate");
+    const backArtUpdateBtn = document.getElementById("var-backArtImageUpdate");
+    const leftSleeveArtUpdateBtn = document.getElementById("var-leftSleeveArtImageUpdate");
+
+    if (frontArtUpdateBtn) {
+      frontArtUpdateBtn.addEventListener("click", function () {
+        const newUrl = document.getElementById("var-frontArtImageInput").value;
+        updateImage("frontArt", newUrl);
+      });
+    }
+
+    if (backArtUpdateBtn) {
+      backArtUpdateBtn.addEventListener("click", function () {
+        const newUrl = document.getElementById("var-backArtImageInput").value;
+        updateImage("backArt", newUrl);
+      });
+    }
+
+    if (leftSleeveArtUpdateBtn) {
+      leftSleeveArtUpdateBtn.addEventListener("click", function () {
+        const newUrl = document.getElementById("var-leftSleeveArtImageInput").value;
+        updateImage("leftSleeveArt", newUrl);
+      });
+    }
+
+    // Add listeners for map image URL updates
+    const frontMapUpdateBtn = document.getElementById("var-frontMapImageUpdate");
+    const backMapUpdateBtn = document.getElementById("var-backMapImageUpdate");
+
+    if (frontMapUpdateBtn) {
+      frontMapUpdateBtn.addEventListener("click", function () {
+        const newUrl = document.getElementById("var-frontMapImageInput").value;
+        updateImage("frontMap", newUrl);
+      });
+    }
+
+    if (backMapUpdateBtn) {
+      backMapUpdateBtn.addEventListener("click", function () {
+        const newUrl = document.getElementById("var-backMapImageInput").value;
+        updateImage("backMap", newUrl);
+      });
+    }
+
+    // Add listeners for overlay image URL updates
+    const frontOverlayUpdateBtn = document.getElementById("var-frontOverlayImageUpdate");
+    const backOverlayUpdateBtn = document.getElementById("var-backOverlayImageUpdate");
+
+    if (frontOverlayUpdateBtn) {
+      frontOverlayUpdateBtn.addEventListener("click", function () {
+        const newUrl = document.getElementById("var-frontOverlayImageInput").value;
+        updateImage("frontOverlay", newUrl);
+      });
+    }
+
+    if (backOverlayUpdateBtn) {
+      backOverlayUpdateBtn.addEventListener("click", function () {
+        const newUrl = document.getElementById("var-backOverlayImageInput").value;
+        updateImage("backOverlay", newUrl);
+      });
+    }
+
+    // Add Enter key support for the input fields
+    const frontArtInput = document.getElementById("var-frontArtImageInput");
+    const backArtInput = document.getElementById("var-backArtImageInput");
+    const leftSleeveArtInput = document.getElementById("var-leftSleeveArtImageInput");
+    const frontMapInput = document.getElementById("var-frontMapImageInput");
+    const backMapInput = document.getElementById("var-backMapImageInput");
+    const frontOverlayInput = document.getElementById("var-frontOverlayImageInput");
+    const backOverlayInput = document.getElementById("var-backOverlayImageInput");
+
+    if (frontArtInput) {
+      frontArtInput.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+          updateImage("frontArt", this.value);
+        }
+      });
+    }
+
+    if (backArtInput) {
+      backArtInput.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+          updateImage("backArt", this.value);
+        }
+      });
+    }
+
+    if (leftSleeveArtInput) {
+      leftSleeveArtInput.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+          updateImage("leftSleeveArt", this.value);
+        }
+      });
+    }
+
+    if (frontMapInput) {
+      frontMapInput.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+          updateImage("frontMap", this.value);
+        }
+      });
+    }
+
+    if (backMapInput) {
+      backMapInput.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+          updateImage("backMap", this.value);
+        }
+      });
+    }
+
+    if (frontOverlayInput) {
+      frontOverlayInput.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+          updateImage("frontOverlay", this.value);
+        }
+      });
+    }
+
+    if (backOverlayInput) {
+      backOverlayInput.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+          updateImage("backOverlay", this.value);
+        }
+      });
+    }
 
     // Set overlay images
     document
